@@ -12,7 +12,7 @@
          send_document/2, send_sticker/2, send_video/2, send_voice/2, send_location/2,
          send_venue/2, send_contact/2, send_chat_action/2, get_user_profile_photos/2,
          get_file/2, kick_chat_member/2, unban_chat_member/2, answer_callback_query/2,
-         get_updates_sync/2, edit_message_text/2]).
+         get_updates_sync/2, edit_message_text/2, edit_message_reply_markup/2]).
 
 -export_type([bot_name/0, update/0]).
 -export_type([json_object/0, json_value/0]).
@@ -120,6 +120,9 @@ answer_callback_query(Bot, #{callback_query_id := _} = Req) ->
 
 edit_message_text(Bot, #{text := _} = Req) ->
   api_call(Bot, <<"editMessageText">>, {json, Req}).
+
+edit_message_reply_markup(Bot, Req) ->
+  api_call(Bot, <<"editMessageReplyMarkup">>, {json, Req}).
 
 %% @doc
 %% This API is for testing purposes
