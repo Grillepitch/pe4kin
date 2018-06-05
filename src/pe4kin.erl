@@ -157,8 +157,7 @@ api_call(Bot, Method, Payload) ->
 
 api_call({ApiServerEndpoint, Token}, _Bot, Method, Payload) ->
     Url = <<ApiServerEndpoint/binary, "/bot", Token/binary, "/", Method/binary>>,
-    case do_api_call(Url, Payload) of
-        {ok, Code, Hdrs, BodyRef} ->
+    Fun = fun(Code, Hdrs, BodyRef) -> 
             ContentType = hackney_headers:parse(<<"content-type">>, Hdrs),
             case {hackney:body(BodyRef), ContentType, Code} of
                 {{ok, <<>>}, _, 200} -> ok;
@@ -171,8 +170,19 @@ api_call({ApiServerEndpoint, Token}, _Bot, Method, Payload) ->
                             {error, telegram, {ErrCode, Code, ErrDescription}}
                     end;
                 {{error, ErrBody}, _, _} -> {error, hackney_body, ErrBody}
-            end;
-        {error, ErrReason} -> {error, hackney, ErrReason}
+            end 
+          end,
+
+    case do_api_call(Url, Payload) of
+        {ok, Code, Hdrs, BodyRef} ->
+          Fun(Code, Hdrs, BodyRef);
+        {error, ErrReason} -> 
+          case do_api_call(Url, Payload) of
+            {ok, Code, Hdrs, BodyRef} ->
+              Fun(Code, Hdrs, BodyRef);
+            {error, ErrReason} ->
+              {error, hackney, ErrReason}
+          end
     end.
 
 
@@ -238,3 +248,7 @@ file2multipart(Key, {file_path, Path}) ->
      {<<"form-data">>, [{<<"name">>, atom_to_binary(Key, utf8)},
                         {<<"filename">>, filename:basename(Path)}]},
       []}.
+
+
+
+
